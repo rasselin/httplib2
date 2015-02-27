@@ -111,10 +111,10 @@ __all__ = [
 
 
 # The httplib debug level, set to a non-zero value to get debug output
-debuglevel = 0
+debuglevel = 10
 
 # A request will be tried 'RETRIES' times if it fails at the socket/connection level.
-RETRIES = 2
+RETRIES = 20
 
 # Python 2.3 support
 if sys.version_info < (2,4):
@@ -907,6 +907,7 @@ class HTTPConnectionWithTimeout(httplib.HTTPConnection):
                 # Different from httplib: support timeouts.
                 if has_timeout(self.timeout):
                     self.sock.settimeout(self.timeout)
+                    print "connect with timeout: (%s)" % self.timeout
                     # End of difference from httplib.
                 if self.debuglevel > 0:
                     print "connect: (%s, %s) ************" % (self.host, self.port)
@@ -915,6 +916,7 @@ class HTTPConnectionWithTimeout(httplib.HTTPConnection):
 
                 self.sock.connect((self.host, self.port) + sa[2:])
             except socket.error, msg:
+                print "connect fail: (%s, %s, %s)" % (self.host, self.port, msg)
                 if self.debuglevel > 0:
                     print "connect fail: (%s, %s)" % (self.host, self.port)
                     if use_proxy:
@@ -1030,6 +1032,7 @@ class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
 
                 if has_timeout(self.timeout):
                     sock.settimeout(self.timeout)
+                    print "connect with timeout: (%s)" % self.timeout
                 sock.connect((self.host, self.port))
                 self.sock =_ssl_wrap_socket(
                     sock, self.key_file, self.cert_file,
