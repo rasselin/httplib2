@@ -114,7 +114,7 @@ __all__ = [
 debuglevel = 10
 
 # A request will be tried 'RETRIES' times if it fails at the socket/connection level.
-RETRIES = 20
+RETRIES = 10
 
 # Python 2.3 support
 if sys.version_info < (2,4):
@@ -1268,21 +1268,24 @@ class Http(object):
     def _conn_request(self, conn, request_uri, method, body, headers):
         i = 0
         seen_bad_status_line = False
+        print "_conn_request RETRY %s" % i
         while i < RETRIES:
             i += 1
-            if i > 1:
-                print "CONNECTION RETRY %s" % i
+            print "_conn_request RETRY+1 %s" % i
             try:
                 if hasattr(conn, 'sock') and conn.sock is None:
                     conn.connect()
                 conn.request(method, request_uri, body, headers)
             except socket.timeout:
+                print "_conn_request socket.timeout %s" % i
                 raise
             except socket.gaierror:
                 conn.close()
+                print "_conn_request socket.gaierror %s" % i
                 raise ServerNotFoundError("Unable to find the server at %s" % conn.host)
             except ssl_SSLError:
                 conn.close()
+                print "_conn_request ssl_SSLError %s" % i
                 raise
             except socket.error, e:
                 err = 0
@@ -1291,19 +1294,23 @@ class Http(object):
                 else:
                     err = e.errno
                 if err == errno.ECONNREFUSED: # Connection refused
+                    print "_conn_request errno.ECONNREFUSED %s" % i
                     raise
             except httplib.HTTPException:
                 # Just because the server closed the connection doesn't apparently mean
                 # that the server didn't send a response.
                 if hasattr(conn, 'sock') and conn.sock is None:
                     if i < RETRIES-1:
+                        print "_conn_request RETRY httplib.HTTPException %s" % i
                         conn.close()
                         conn.connect()
                         continue
                     else:
                         conn.close()
+                        print "_conn_request httplib.HTTPException %s" % i
                         raise
                 if i < RETRIES-1:
+                    print "_conn_request RETRY -1 %s" % i
                     conn.close()
                     conn.connect()
                     continue
@@ -1321,14 +1328,17 @@ class Http(object):
                     continue
                 else:
                     conn.close()
+                    print "_conn_request httplib.BadStatusLine %s" % i
                     raise
             except (socket.error, httplib.HTTPException):
                 if i < RETRIES-1:
+                    print "_conn_request RETRY socket.error, httplib.HTTPException" % i
                     conn.close()
                     conn.connect()
                     continue
                 else:
                     conn.close()
+                    print "_conn_request socket.error, httplib.HTTPException %s" % i
                     raise
             else:
                 content = ""
@@ -1339,6 +1349,8 @@ class Http(object):
                 response = Response(response)
                 if method != "HEAD":
                     content = _decompressContent(response, content)
+
+            print "_conn_request break %s" % i
             break
         return (response, content)
 
