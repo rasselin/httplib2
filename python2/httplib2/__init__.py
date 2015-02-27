@@ -1270,6 +1270,8 @@ class Http(object):
         seen_bad_status_line = False
         while i < RETRIES:
             i += 1
+            if i > 1:
+                print "CONNECTION RETRY %s" % i
             try:
                 if hasattr(conn, 'sock') and conn.sock is None:
                     conn.connect()
