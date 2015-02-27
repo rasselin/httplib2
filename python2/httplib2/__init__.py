@@ -1063,7 +1063,7 @@ class HTTPSConnectionWithTimeout(httplib.HTTPSConnection):
                 raise
             except socket.error, msg:
                 if self.debuglevel > 0:
-                    print "connect fail: (%s, %s)" % (self.host, self.port)
+                    print "connect fail: (%s, %s, %s)" % (self.host, self.port, msg)
                     if use_proxy:
                         print "proxy: %s" % str((proxy_host, proxy_port, proxy_rdns, proxy_user, proxy_pass))
                 if self.sock:
