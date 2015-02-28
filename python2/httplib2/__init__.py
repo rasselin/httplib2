@@ -1293,10 +1293,12 @@ class Http(object):
                     err = getattr(e, 'args')[0]
                 else:
                     err = e.errno
+                print "_conn_request socket.error %s %s %s" % (i, e, err)
                 if err == errno.ECONNREFUSED: # Connection refused
                     print "_conn_request errno.ECONNREFUSED %s" % i
                     raise
             except httplib.HTTPException:
+                print "_conn_request httplib.HTTPException %s" % i
                 # Just because the server closed the connection doesn't apparently mean
                 # that the server didn't send a response.
                 if hasattr(conn, 'sock') and conn.sock is None:
@@ -1315,8 +1317,10 @@ class Http(object):
                     conn.connect()
                     continue
             try:
+                print "_conn_request getresponse %s" % i
                 response = conn.getresponse()
             except httplib.BadStatusLine:
+                print "_conn_request response httplib.BadStatusLine %s" % i
                 # If we get a BadStatusLine on the first try then that means
                 # the connection just went stale, so retry regardless of the
                 # number of RETRIES set.
@@ -1331,6 +1335,7 @@ class Http(object):
                     print "_conn_request httplib.BadStatusLine %s" % i
                     raise
             except (socket.error, httplib.HTTPException):
+                print "_conn_request response socket.error, httplib.httpexectpion %s" % i
                 if i < RETRIES-1:
                     print "_conn_request RETRY socket.error, httplib.HTTPException" % i
                     conn.close()
