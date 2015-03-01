@@ -1272,7 +1272,7 @@ class Http(object):
 
         while i < RETRIES:
             i += 1
-            print "_conn_request RETRY+1 i=%s RETRIES=%s " % (i, RETRIES)
+            print "_conn_request RETRY+1 i=%s" % i
             try:
                 if hasattr(conn, 'sock') and conn.sock is None:
                     print "_conn_request Trying to connection"
@@ -1280,15 +1280,13 @@ class Http(object):
                 print "_conn_request Sending request %s" % request_uri
                 conn.request(method, request_uri, body, headers)
             except socket.timeout:
-                print "_conn_request socket.timeout i=%s RETRIES=%s " % (i, RETRIES)
+                print "_conn_request socket.timeout i=%s" % i
                 raise
             except socket.gaierror:
                 conn.close()
-                print "_conn_request socket.gaierror i=%s RETRIES=%s " % (i, RETRIES)
                 raise ServerNotFoundError("Unable to find the server at %s" % conn.host)
             except ssl_SSLError:
                 conn.close()
-                print "_conn_request ssl_SSLError i=%s RETRIES=%s " % (i, RETRIES)
                 raise
             except socket.error, e:
                 err = 0
@@ -1298,38 +1296,47 @@ class Http(object):
                     err = e.errno
                 print "_conn_request socket.error %s %s %s" % (i, e, err)
                 if err == errno.ECONNREFUSED: # Connection refused
-                    print "_conn_request errno.ECONNREFUSED i=%s RETRIES=%s " % (i, RETRIES)
+                    print "_conn_request errno.ECONNREFUSED i=%s" % i
                     raise
-                else:
-                    #TODO(Ramy): we need to retry here.
-                    print "_conn_request NOT errno.ECONNREFUSED i=%s RETRIES=%s " % (i, RETRIES)
+                if hasattr(conn, 'sock') and conn.sock is None:
+                    if i < RETRIES-1:
+                        print "_conn_request RETRY socket.error i=%s" % i
+                        conn.close()
+                        # Connect should be down after continue, no? conn.connect()
+                        continue
+                    else:
+                        conn.close()
+                        print "_conn_request socket.error i=%s" % i
+                        raise
+                if i < RETRIES-1:
+                    print "_conn_request socket.error RETRY -1 i=%s" % i
                     conn.close()
-                    conn = None
+                    # Connect should be down after continue, no? conn.connect()
                     continue
             except httplib.HTTPException:
-                print "_conn_request httplib.HTTPException i=%s RETRIES=%s " % (i, RETRIES)
+                print "_conn_request httplib.HTTPException i=%s" % i
                 # Just because the server closed the connection doesn't apparently mean
                 # that the server didn't send a response.
                 if hasattr(conn, 'sock') and conn.sock is None:
                     if i < RETRIES-1:
-                        print "_conn_request RETRY httplib.HTTPException i=%s RETRIES=%s " % (i, RETRIES)
+                        print "_conn_request RETRY httplib.HTTPException i=%s" % i
                         conn.close()
                         conn.connect()
                         continue
                     else:
                         conn.close()
-                        print "_conn_request httplib.HTTPException i=%s RETRIES=%s " % (i, RETRIES)
+                        print "_conn_request httplib.HTTPException i=%s" % i
                         raise
                 if i < RETRIES-1:
-                    print "_conn_request RETRY -1 i=%s RETRIES=%s " % (i, RETRIES)
+                    print "_conn_request httplib.HTTPException RETRY -1 i=%s" % i
                     conn.close()
                     conn.connect()
                     continue
             try:
-                print "_conn_request getresponse i=%s RETRIES=%s " % (i, RETRIES)
+                print "_conn_request getresponse i=%s" % i
                 response = conn.getresponse()
             except httplib.BadStatusLine:
-                print "_conn_request response httplib.BadStatusLine i=%s RETRIES=%s " % (i, RETRIES)
+                print "_conn_request response httplib.BadStatusLine i=%s" % i
                 # If we get a BadStatusLine on the first try then that means
                 # the connection just went stale, so retry regardless of the
                 # number of RETRIES set.
@@ -1341,10 +1348,10 @@ class Http(object):
                     continue
                 else:
                     conn.close()
-                    print "_conn_request httplib.BadStatusLine i=%s RETRIES=%s " % (i, RETRIES)
+                    print "_conn_request httplib.BadStatusLine i=%s" % i
                     raise
             except (socket.error, httplib.HTTPException):
-                print "_conn_request response socket.error, httplib.httpexectpion i=%s RETRIES=%s " % (i, RETRIES)
+                print "_conn_request response socket.error, httplib.httpexectpion i=%s" % i
                 if i < RETRIES-1:
                     print "_conn_request RETRY socket.error, httplib.HTTPException" % i
                     conn.close()
@@ -1352,7 +1359,7 @@ class Http(object):
                     continue
                 else:
                     conn.close()
-                    print "_conn_request socket.error, httplib.HTTPException i=%s RETRIES=%s " % (i, RETRIES)
+                    print "_conn_request socket.error, httplib.HTTPException i=%s" % i
                     raise
             else:
                 content = ""
@@ -1364,7 +1371,7 @@ class Http(object):
                 if method != "HEAD":
                     content = _decompressContent(response, content)
 
-            print "_conn_request break i=%s RETRIES=%s " % (i, RETRIES)
+            print "_conn_request break i=%s" % i
             break
         return (response, content)
 
