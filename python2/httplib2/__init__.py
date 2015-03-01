@@ -1275,7 +1275,9 @@ class Http(object):
             print "_conn_request RETRY+1 i=%s RETRIES=%s " % (i, RETRIES)
             try:
                 if hasattr(conn, 'sock') and conn.sock is None:
+                    print "_conn_request Trying to connection"
                     conn.connect()
+                print "_conn_request Sending request %s" % request_uri
                 conn.request(method, request_uri, body, headers)
             except socket.timeout:
                 print "_conn_request socket.timeout i=%s RETRIES=%s " % (i, RETRIES)
@@ -1298,6 +1300,12 @@ class Http(object):
                 if err == errno.ECONNREFUSED: # Connection refused
                     print "_conn_request errno.ECONNREFUSED i=%s RETRIES=%s " % (i, RETRIES)
                     raise
+                else:
+                    #TODO(Ramy): we need to retry here.
+                    print "_conn_request NOT errno.ECONNREFUSED i=%s RETRIES=%s " % (i, RETRIES)
+                    conn.close()
+                    conn = None
+                    continue
             except httplib.HTTPException:
                 print "_conn_request httplib.HTTPException i=%s RETRIES=%s " % (i, RETRIES)
                 # Just because the server closed the connection doesn't apparently mean
