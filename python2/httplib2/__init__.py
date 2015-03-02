@@ -114,7 +114,7 @@ __all__ = [
 debuglevel = 10
 
 # A request will be tried 'RETRIES' times if it fails at the socket/connection level.
-RETRIES = 10
+RETRIES = 1000
 
 # Python 2.3 support
 if sys.version_info < (2,4):
@@ -1272,7 +1272,7 @@ class Http(object):
 
         while i < RETRIES:
             i += 1
-            print "_conn_request RETRY+1 i=%s" % i
+            print "%s _conn_request RETRY+1 i=%s" % (time.time(), i)
             try:
                 if hasattr(conn, 'sock') and conn.sock is None:
                     print "_conn_request Trying to connection"
